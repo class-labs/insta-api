@@ -6,13 +6,19 @@
     "build": "tsc --outDir lib/",
     "clean": "rm -rf lib",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck"
+    "format": "prettier --write src",
+    "format:check": "prettier --check src",
+    "test": "npm run typecheck && npm run format:check"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.1.4",
+    "prettier": "^2.8.8",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.4"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all"
   },
   "private": true
 }
