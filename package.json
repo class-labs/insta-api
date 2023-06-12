@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "start": "ts-node-dev --no-notify --respawn --transpile-only src/index.ts",
+    "start:prod": "node lib/index.js",
     "build": "tsc --outDir lib/",
     "clean": "rm -rf lib",
     "typecheck": "tsc --noEmit",
