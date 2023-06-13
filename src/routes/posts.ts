@@ -3,7 +3,8 @@ import { HttpError } from '@nbit/express';
 import { defineRoutes } from '../server';
 import { db } from '../db';
 import { schema } from '../support/schema';
-import { validateImageFileName } from '../support/image';
+import { toFullyQualifiedUrl, validateImageFileName } from '../support/image';
+import type { Post } from '../types/Post';
 
 const PostCreateInput = schema(({ Record, String }) => {
   return Record({
@@ -16,12 +17,16 @@ export default defineRoutes((app) => [
   app.get('/posts', async () => {
     const posts = await db.Post.getAll();
     posts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-    return posts;
+    return posts.map((post) => normalizePostListItem(post));
   }),
 
   app.get('/posts/:id', async (request) => {
     const { id } = request.params;
-    return await db.Post.getById(id);
+    const post = await db.Post.getById(id);
+    if (!post) {
+      return;
+    }
+    return normalizePost(post);
   }),
 
   app.post('/posts', async (request) => {
@@ -42,6 +47,29 @@ export default defineRoutes((app) => [
       comments: [],
       createdAt: new Date().toISOString(),
     });
-    return post;
+    return normalizePost(post);
   }),
 ]);
+
+function normalizePostListItem(post: Post) {
+  const { id, author, photo, caption, likedBy, comments, createdAt } = post;
+  return {
+    id,
+    author,
+    photo: toFullyQualifiedUrl(photo),
+    caption,
+    likeCount: likedBy.length,
+    commentCount: comments.length,
+    createdAt,
+  };
+}
+
+function normalizePost(post: Post) {
+  const { id, author, photo, ...other } = post;
+  return {
+    id,
+    author,
+    photo: toFullyQualifiedUrl(photo),
+    ...other,
+  };
+}

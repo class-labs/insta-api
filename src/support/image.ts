@@ -1,3 +1,4 @@
+import { IMAGE_SERVING_URL } from './constants';
 import { verify } from './signature';
 
 // The single-letter identifier will be encoded into the signed file ID
@@ -22,4 +23,13 @@ export function validateImageFileName(fileName: string) {
     return false;
   }
   return true;
+}
+
+export function toFullyQualifiedUrl(fileName: string) {
+  // If it's already a fully qualified URL then return as is
+  const [proto] = fileName.split('//');
+  if (proto === 'http:' || proto === 'https:') {
+    return fileName;
+  }
+  return IMAGE_SERVING_URL.replace('%FILE_NAME%', fileName);
 }
