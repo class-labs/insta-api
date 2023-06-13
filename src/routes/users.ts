@@ -1,9 +1,16 @@
-import { HttpError } from '@nbit/express';
+import { HttpError, Response } from '@nbit/express';
 
 import { defineRoutes } from '../server';
 import { db } from '../db';
 import { schema } from '../support/schema';
 import type { User } from '../types/User';
+
+const LoginInput = schema(({ Record, String }) => {
+  return Record({
+    username: String,
+    password: String,
+  });
+});
 
 const UserCreateInput = schema(({ Record, String }) => {
   return Record({
@@ -27,6 +34,36 @@ export default defineRoutes((app) => [
       return;
     }
     return normalizeUser(user);
+  }),
+
+  app.get('/me', async (request) => {
+    const user = await request.authenticate();
+    if (!user) {
+      throw new HttpError({ status: 401 });
+    }
+    return normalizeUser(user);
+  }),
+
+  app.post('/login', async (request) => {
+    const body = await request.json();
+    if (!LoginInput.guard(body)) {
+      throw new HttpError({ status: 400 });
+    }
+    const { username, password } = body;
+    const users = await db.User.findWhere(
+      (user) => user.username.toLowerCase() === username.toLowerCase(),
+    );
+    const user = users[0];
+    if (!user || user.password !== password) {
+      return Response.json({ success: false }, { status: 401 });
+    }
+    const now = new Date().toISOString();
+    const session = await db.Session.insert({ user: user.id, createdAt: now });
+    return {
+      success: true,
+      user: normalizeUser(user),
+      token: session.id,
+    };
   }),
 
   app.post('/signup', async (request) => {
@@ -57,6 +94,16 @@ export default defineRoutes((app) => [
       user: normalizeUser(user),
       token: session.id,
     };
+  }),
+
+  app.post('/logout', async (request) => {
+    const session = await request.getSession();
+    if (session) {
+      await db.Session.delete(session.id);
+      return { success: true };
+    } else {
+      return { success: false };
+    }
   }),
 ]);
 
