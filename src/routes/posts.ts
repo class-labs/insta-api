@@ -64,6 +64,25 @@ export default defineRoutes((app) => [
     await db.Post.delete(post.id);
     return { success: true };
   }),
+
+  app.post('/posts/:id/like', async (request) => {
+    const user = await request.authenticate();
+    const postId = request.params.id;
+    const post = await db.Post.getById(postId);
+    if (!post) {
+      throw new HttpError({ status: 400, message: 'Invalid postId' });
+    }
+    const likedBy = new Set(post.likedBy);
+    if (likedBy.has(user.id)) {
+      likedBy.delete(user.id);
+    } else {
+      likedBy.add(user.id);
+    }
+    const newPost = await db.Post.update(postId, {
+      likedBy: Array.from(likedBy),
+    });
+    return normalizePost(newPost ?? post);
+  }),
 ]);
 
 function normalizePostListItem(post: Post) {
