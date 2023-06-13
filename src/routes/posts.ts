@@ -49,6 +49,21 @@ export default defineRoutes((app) => [
     });
     return normalizePost(post);
   }),
+
+  app.delete('/posts/:id', async (request) => {
+    const user = await request.authenticate();
+    const postId = request.params.id;
+    const post = await db.Post.getById(postId);
+    if (!post) {
+      throw new HttpError({ status: 400, message: 'Invalid postId' });
+    }
+    // TODO: Allow admin
+    if (post.author !== user.id) {
+      throw new HttpError({ status: 403, message: 'Forbidden' });
+    }
+    await db.Post.delete(post.id);
+    return { success: true };
+  }),
 ]);
 
 function normalizePostListItem(post: Post) {
