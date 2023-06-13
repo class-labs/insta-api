@@ -9,20 +9,26 @@ const supportedImageTypes: Record<string, { type: string; ext: string }> = {
 
 const imageById = new Map(Object.entries(supportedImageTypes));
 
+export const imageByType = new Map(
+  Object.entries(supportedImageTypes).map(([id, { type, ext }]) => {
+    return [type, { id, ext }];
+  }),
+);
+
 export function validateImageFileName(fileName: string) {
   if (!fileName.match(/^\w+\.\w+$/)) {
-    return false;
+    return;
   }
   const [id = '', ext = ''] = fileName.split('.');
   if (!verify(id)) {
-    return false;
+    return;
   }
   const typeId = id.slice(0, -8).slice(-1);
-  const imageType = imageById.get(typeId);
-  if (!imageType || ext !== imageType.ext) {
-    return false;
+  const imageDetails = imageById.get(typeId);
+  if (!imageDetails || ext !== imageDetails.ext) {
+    return;
   }
-  return true;
+  return imageDetails;
 }
 
 export function toFullyQualifiedUrl(fileName: string) {

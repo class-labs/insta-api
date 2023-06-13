@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { createId } from './createId';
 import { getStore } from './kvstore';
 
 type Model<T extends { id: string }> = {
@@ -90,8 +91,4 @@ function toArray(input: unknown): Array<string> {
 
 function toKey(name: string, id: string) {
   return `${name}/${id}`;
-}
-
-function createId() {
-  return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(36);
 }
