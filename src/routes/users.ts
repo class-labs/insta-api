@@ -21,6 +21,15 @@ const UserCreateInput = schema(({ Record, String }) => {
   });
 });
 
+const UserUpdateInput = schema(({ Record, String }) => {
+  return Record({
+    name: String,
+    profilePhoto: String,
+    username: String,
+    password: String,
+  }).asPartial();
+});
+
 export default defineRoutes((app) => [
   app.get('/users', async () => {
     const users = await db.User.getAll();
@@ -104,6 +113,43 @@ export default defineRoutes((app) => [
     } else {
       return { success: false };
     }
+  }),
+
+  app.post('/users/:id', async (request) => {
+    const user = await request.authenticate();
+    const userId = request.params.id;
+    // TODO: Allow admin
+    if (userId !== user.id) {
+      throw new HttpError({ status: 400 });
+    }
+    const body = await request.json();
+    if (!UserUpdateInput.guard(body)) {
+      throw new HttpError({ status: 400 });
+    }
+    const { name, profilePhoto, username, password } = body;
+    if (username !== undefined) {
+      if (!username.length || username.match(/\W/)) {
+        throw new HttpError({ status: 400, message: 'Invalid username' });
+      }
+      const existingUsers = await db.User.findWhere(
+        (user) =>
+          user.id !== userId &&
+          user.username.toLowerCase() === username.toLowerCase(),
+      );
+      if (existingUsers.length) {
+        throw new HttpError({
+          status: 400,
+          message: 'Username already exists',
+        });
+      }
+    }
+    const newUser = await db.User.update(user.id, {
+      name,
+      profilePhoto,
+      username,
+      password,
+    });
+    return normalizeUser(newUser ?? user);
   }),
 ]);
 
