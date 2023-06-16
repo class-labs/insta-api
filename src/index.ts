@@ -7,6 +7,7 @@ import type { NextFunction, Request, Response } from 'express';
 
 import * as handlers from './routes';
 import { attachRoutes } from './server';
+import { loadPlayground } from './playground/loadPlayground';
 
 const PORT = Number(process.env.PORT || 3000);
 
@@ -16,6 +17,8 @@ app.use(cors());
 
 const middleware = attachRoutes(...Object.values(handlers));
 app.use(middleware);
+
+loadPlayground(app);
 
 app.use((request, response) => {
   response.status(404).json({ error: 'Not Found' });
