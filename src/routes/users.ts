@@ -3,6 +3,7 @@ import { HttpError } from '@nbit/express';
 import { defineRoutes } from '../server';
 import { db } from '../db';
 import { schema } from '../support/schema';
+import type { User } from '../types/User';
 
 const UserCreateInput = schema(({ Record, String }) => {
   return Record({
@@ -15,13 +16,17 @@ const UserCreateInput = schema(({ Record, String }) => {
 
 export default defineRoutes((app) => [
   app.get('/users', async () => {
-    return await db.User.getAll();
+    const users = await db.User.getAll();
+    return users.map((user) => normalizeUser(user));
   }),
 
   app.get('/users/:id', async (request) => {
     const { id } = request.params;
     const user = await db.User.getById(id);
-    return user ?? undefined;
+    if (!user) {
+      return;
+    }
+    return normalizeUser(user);
   }),
 
   app.post('/signup', async (request) => {
@@ -49,12 +54,14 @@ export default defineRoutes((app) => [
     const session = await db.Session.insert({ user: user.id, createdAt: now });
     return {
       success: true,
-      user: {
-        id: user.id,
-        name,
-        username,
-      },
+      user: normalizeUser(user),
       token: session.id,
     };
   }),
 ]);
+
+// Ensure the password is not exposed
+function normalizeUser(user: User) {
+  const { id, name, profilePhoto, username } = user;
+  return { id, name, profilePhoto, username };
+}
