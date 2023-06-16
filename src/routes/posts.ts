@@ -44,7 +44,8 @@ export default defineRoutes((app) => [
     if (!PostCreateInput.guard(body)) {
       throw new HttpError({ status: 400 });
     }
-    const { photo, caption } = body;
+    const { caption } = body;
+    const photo = body.photo.split('/').pop() ?? '';
     if (!validateImageFileName(photo)) {
       throw new HttpError({ status: 400, message: 'Invalid photo' });
     }
