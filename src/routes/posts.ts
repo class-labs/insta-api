@@ -29,11 +29,13 @@ export default defineRoutes((app) => [
 
   app.get('/posts/:id', async (request) => {
     const { id } = request.params;
+    const user = await request.getCurrentUser();
     const post = await db.Post.getById(id);
-    if (!post) {
+    const author = await db.User.getById(post?.author ?? '');
+    if (!post || !author) {
       return;
     }
-    return normalizePost(post);
+    return normalizePost(post, author, user);
   }),
 
   app.post('/posts', async (request) => {
@@ -54,7 +56,7 @@ export default defineRoutes((app) => [
       comments: [],
       createdAt: new Date().toISOString(),
     });
-    return normalizePost(post);
+    return normalizePost(post, user, user);
   }),
 
   app.delete('/posts/:id', async (request) => {
@@ -76,7 +78,8 @@ export default defineRoutes((app) => [
     const user = await request.authenticate();
     const postId = request.params.id;
     const post = await db.Post.getById(postId);
-    if (!post) {
+    const author = await db.User.getById(post?.author ?? '');
+    if (!post || !author) {
       throw new HttpError({ status: 400, message: 'Invalid postId' });
     }
     const likedBy = new Set(post.likedBy);
@@ -88,6 +91,6 @@ export default defineRoutes((app) => [
     const newPost = await db.Post.update(postId, {
       likedBy: Array.from(likedBy),
     });
-    return normalizePost(newPost ?? post);
+    return normalizePost(newPost ?? post, author, user);
   }),
 ]);

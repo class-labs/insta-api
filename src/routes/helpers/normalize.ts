@@ -26,12 +26,16 @@ export function normalizePostListItem(
   };
 }
 
-export function normalizePost(post: Post) {
-  const { id, author, photo, ...other } = post;
+export function normalizePost(post: Post, author: User, user: User | null) {
+  const { id, photo, caption, likedBy, comments, createdAt } = post;
   return {
     id,
-    author,
+    author: normalizeUser(author),
     photo: toFullyQualifiedUrl(photo),
-    ...other,
+    caption,
+    likedBy,
+    comments,
+    isLikedByViewer: user ? likedBy.includes(user.id) : false,
+    createdAt,
   };
 }
