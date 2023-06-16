@@ -5,6 +5,7 @@ import { db } from '../db';
 import { schema } from '../support/schema';
 import { toFullyQualifiedUrl, validateImageFileName } from '../support/image';
 import type { Post } from '../types/Post';
+import type { User } from '../types/User';
 
 const PostCreateInput = schema(({ Record, String }) => {
   return Record({
@@ -14,10 +15,11 @@ const PostCreateInput = schema(({ Record, String }) => {
 });
 
 export default defineRoutes((app) => [
-  app.get('/posts', async () => {
+  app.get('/posts', async (request) => {
+    const user = await request.getCurrentUser();
     const posts = await db.Post.getAll();
     posts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-    return posts.map((post) => normalizePostListItem(post));
+    return posts.map((post) => normalizePostListItem(post, user));
   }),
 
   app.get('/posts/:id', async (request) => {
@@ -85,7 +87,7 @@ export default defineRoutes((app) => [
   }),
 ]);
 
-function normalizePostListItem(post: Post) {
+function normalizePostListItem(post: Post, user: User | null) {
   const { id, author, photo, caption, likedBy, comments, createdAt } = post;
   return {
     id,
@@ -94,6 +96,7 @@ function normalizePostListItem(post: Post) {
     caption,
     likeCount: likedBy.length,
     commentCount: comments.length,
+    isLikedByViewer: user ? likedBy.includes(user.id) : false,
     createdAt,
   };
 }
