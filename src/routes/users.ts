@@ -3,7 +3,8 @@ import { HttpError, Response } from '@nbit/express';
 import { defineRoutes } from '../server';
 import { db } from '../db';
 import { schema } from '../support/schema';
-import type { User } from '../types/User';
+
+import { normalizeUser } from './helpers/normalize';
 
 const LoginInput = schema(({ Record, String }) => {
   return Record({
@@ -152,9 +153,3 @@ export default defineRoutes((app) => [
     return normalizeUser(newUser ?? user);
   }),
 ]);
-
-// Ensure the password is not exposed
-function normalizeUser(user: User) {
-  const { id, name, profilePhoto, username } = user;
-  return { id, name, profilePhoto, username };
-}

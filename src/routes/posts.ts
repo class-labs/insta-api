@@ -3,9 +3,9 @@ import { HttpError } from '@nbit/express';
 import { defineRoutes } from '../server';
 import { db } from '../db';
 import { schema } from '../support/schema';
-import { toFullyQualifiedUrl, validateImageFileName } from '../support/image';
-import type { Post } from '../types/Post';
-import type { User } from '../types/User';
+import { validateImageFileName } from '../support/image';
+
+import { normalizePost, normalizePostListItem } from './helpers/normalize';
 
 const PostCreateInput = schema(({ Record, String }) => {
   return Record({
@@ -86,27 +86,3 @@ export default defineRoutes((app) => [
     return normalizePost(newPost ?? post);
   }),
 ]);
-
-function normalizePostListItem(post: Post, user: User | null) {
-  const { id, author, photo, caption, likedBy, comments, createdAt } = post;
-  return {
-    id,
-    author,
-    photo: toFullyQualifiedUrl(photo),
-    caption,
-    likeCount: likedBy.length,
-    commentCount: comments.length,
-    isLikedByViewer: user ? likedBy.includes(user.id) : false,
-    createdAt,
-  };
-}
-
-function normalizePost(post: Post) {
-  const { id, author, photo, ...other } = post;
-  return {
-    id,
-    author,
-    photo: toFullyQualifiedUrl(photo),
-    ...other,
-  };
-}
