@@ -19,7 +19,12 @@ export default defineRoutes((app) => [
     const user = await request.getCurrentUser();
     const posts = await db.Post.getAll();
     posts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-    return posts.map((post) => normalizePostListItem(post, user));
+    const users = await db.User.getAll();
+    const usersMap = new Map(users.map((user) => [user.id, user]));
+    return posts.flatMap((post) => {
+      const author = usersMap.get(post.author);
+      return author ? [normalizePostListItem(post, author, user)] : [];
+    });
   }),
 
   app.get('/posts/:id', async (request) => {

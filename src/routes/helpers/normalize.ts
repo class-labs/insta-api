@@ -8,11 +8,15 @@ export function normalizeUser(user: User) {
   return { id, name, profilePhoto, username };
 }
 
-export function normalizePostListItem(post: Post, user: User | null) {
-  const { id, author, photo, caption, likedBy, comments, createdAt } = post;
+export function normalizePostListItem(
+  post: Post,
+  author: User,
+  user: User | null,
+) {
+  const { id, photo, caption, likedBy, comments, createdAt } = post;
   return {
     id,
-    author,
+    author: normalizeUser(author),
     photo: toFullyQualifiedUrl(photo),
     caption,
     likeCount: likedBy.length,
