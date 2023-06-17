@@ -5,7 +5,11 @@ import { db } from '../db';
 import { schema } from '../support/schema';
 import { validateImageFileName } from '../support/image';
 
-import { normalizePost, normalizePostListItem } from './helpers/normalize';
+import {
+  normalizePost,
+  normalizePostFull,
+  normalizePostListItem,
+} from './helpers/normalize';
 
 const PostCreateInput = schema(({ Record, String }) => {
   return Record({
@@ -31,11 +35,17 @@ export default defineRoutes((app) => [
     const { id } = request.params;
     const user = await request.getCurrentUser();
     const post = await db.Post.getById(id);
+    const users = await db.User.getAll();
+    const usersMap = new Map(users.map((user) => [user.id, user]));
+    const comments = await db.Comment.getAll();
+    const commentsMap = new Map(
+      comments.map((comment) => [comment.id, comment]),
+    );
     const author = await db.User.getById(post?.author ?? '');
     if (!post || !author) {
       return;
     }
-    return normalizePost(post, author, user);
+    return normalizePostFull(post, author, usersMap, commentsMap, user);
   }),
 
   app.post('/posts', async (request) => {
