@@ -6,19 +6,19 @@ import { db } from '../db';
 
 const CommentCreateInput = schema(({ Record, String }) => {
   return Record({
-    postId: String,
     text: String,
   });
 });
 
 export default defineRoutes((app) => [
-  app.post('/comments', async (request) => {
+  app.post('/posts/:id/comments', async (request) => {
+    const postId = request.params.id;
     const user = await request.authenticate();
     const body = await request.json();
     if (!CommentCreateInput.guard(body)) {
       throw new HttpError({ status: 400 });
     }
-    const { postId, text } = body;
+    const { text } = body;
     const post = await db.Post.getById(postId);
     if (!post) {
       throw new HttpError({ status: 400, message: 'Invalid postId' });
