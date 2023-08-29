@@ -54,7 +54,7 @@ export default defineRoutes((app) => [
       '';
     const imageType = imageByType.get(contentType);
     if (!imageType) {
-      throw new HttpError({ status: 400 });
+      throw new HttpError(400);
     }
 
     if (IMAGE_UPLOAD_URL) {
@@ -68,17 +68,17 @@ export default defineRoutes((app) => [
         body: request.body,
       });
       if (!response.ok) {
-        throw new HttpError({
-          status: 500,
-          message: `Unexpected response status from upstream server: ${response.status}`,
-        });
+        throw new HttpError(
+          500,
+          `Unexpected response status from upstream server: ${response.status}`,
+        );
       }
       const result = await response.json();
       if (!UploadResponseBody.guard(result)) {
-        throw new HttpError({
-          status: 500,
-          message: `Unexpected response body from upstream server`,
-        });
+        throw new HttpError(
+          500,
+          `Unexpected response body from upstream server`,
+        );
       }
       return result;
     }

@@ -16,12 +16,12 @@ export default defineRoutes((app) => [
     const user = await request.authenticate();
     const body = await request.json();
     if (!CommentCreateInput.guard(body)) {
-      throw new HttpError({ status: 400 });
+      throw new HttpError(400);
     }
     const { text } = body;
     const post = await db.Post.getById(postId);
     if (!post) {
-      throw new HttpError({ status: 400, message: 'Invalid postId' });
+      throw new HttpError(400, 'Invalid postId');
     }
     const comment = await db.Comment.insert({
       post: post.id,
@@ -39,19 +39,16 @@ export default defineRoutes((app) => [
     const commentId = request.params.id;
     const comment = await db.Comment.getById(commentId);
     if (!comment) {
-      throw new HttpError({ status: 400, message: 'Invalid commentId' });
+      throw new HttpError(400, 'Invalid commentId');
     }
     const postId = comment.post;
     const post = await db.Post.getById(postId);
     if (!post) {
-      throw new HttpError({
-        status: 500,
-        message: 'Comment does not belong to any known post',
-      });
+      throw new HttpError(500, 'Comment does not belong to any known post');
     }
     // TODO: Allow admin
     if (comment.author !== user.id && post.author !== user.id) {
-      throw new HttpError({ status: 403, message: 'Forbidden' });
+      throw new HttpError(403, 'Forbidden');
     }
     const newCommentList = post.comments.filter((id) => id !== comment.id);
     await db.Post.update(post.id, { comments: newCommentList });

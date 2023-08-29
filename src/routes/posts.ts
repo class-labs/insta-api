@@ -52,12 +52,12 @@ export default defineRoutes((app) => [
     const user = await request.authenticate();
     const body = await request.json();
     if (!PostCreateInput.guard(body)) {
-      throw new HttpError({ status: 400 });
+      throw new HttpError(400);
     }
     const { caption } = body;
     const photo = body.photo.split('/').pop() ?? '';
     if (!validateImageFileName(photo)) {
-      throw new HttpError({ status: 400, message: 'Invalid photo' });
+      throw new HttpError(400, 'Invalid photo');
     }
     const post = await db.Post.insert({
       author: user.id,
@@ -75,11 +75,11 @@ export default defineRoutes((app) => [
     const postId = request.params.id;
     const post = await db.Post.getById(postId);
     if (!post) {
-      throw new HttpError({ status: 400, message: 'Invalid postId' });
+      throw new HttpError(400, 'Invalid postId');
     }
     // TODO: Allow admin
     if (post.author !== user.id) {
-      throw new HttpError({ status: 403, message: 'Forbidden' });
+      throw new HttpError(403, 'Forbidden');
     }
     await db.Post.delete(post.id);
     return { success: true };
@@ -91,7 +91,7 @@ export default defineRoutes((app) => [
     const post = await db.Post.getById(postId);
     const author = await db.User.getById(post?.author ?? '');
     if (!post || !author) {
-      throw new HttpError({ status: 400, message: 'Invalid postId' });
+      throw new HttpError(400, 'Invalid postId');
     }
     const likedBy = new Set(post.likedBy);
     if (likedBy.has(user.id)) {

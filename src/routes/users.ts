@@ -49,7 +49,7 @@ export default defineRoutes((app) => [
   app.get('/me', async (request) => {
     const user = await request.authenticate();
     if (!user) {
-      throw new HttpError({ status: 401 });
+      throw new HttpError(401);
     }
     return normalizeUser(user);
   }),
@@ -57,7 +57,7 @@ export default defineRoutes((app) => [
   app.post('/login', async (request) => {
     const body = await request.json();
     if (!LoginInput.guard(body)) {
-      throw new HttpError({ status: 400 });
+      throw new HttpError(400);
     }
     const { username, password } = body;
     const users = await db.User.findWhere(
@@ -79,17 +79,17 @@ export default defineRoutes((app) => [
   app.post('/signup', async (request) => {
     const body = await request.json();
     if (!UserCreateInput.guard(body)) {
-      throw new HttpError({ status: 400 });
+      throw new HttpError(400);
     }
     const { name, profilePhoto, username, password } = body;
     if (!username.length || username.match(/\W/)) {
-      throw new HttpError({ status: 400, message: 'Invalid username' });
+      throw new HttpError(400, 'Invalid username');
     }
     const existingUsers = await db.User.findWhere(
       (user) => user.username.toLowerCase() === username.toLowerCase(),
     );
     if (existingUsers.length) {
-      throw new HttpError({ status: 400, message: 'Username already exists' });
+      throw new HttpError(400, 'Username already exists');
     }
     const user = await db.User.insert({
       name,
@@ -121,16 +121,16 @@ export default defineRoutes((app) => [
     const userId = request.params.id;
     // TODO: Allow admin
     if (userId !== user.id) {
-      throw new HttpError({ status: 400 });
+      throw new HttpError(400);
     }
     const body = await request.json();
     if (!UserUpdateInput.guard(body)) {
-      throw new HttpError({ status: 400 });
+      throw new HttpError(400);
     }
     const { name, profilePhoto, username, password } = body;
     if (username !== undefined) {
       if (!username.length || username.match(/\W/)) {
-        throw new HttpError({ status: 400, message: 'Invalid username' });
+        throw new HttpError(400, 'Invalid username');
       }
       const existingUsers = await db.User.findWhere(
         (user) =>
@@ -138,10 +138,7 @@ export default defineRoutes((app) => [
           user.username.toLowerCase() === username.toLowerCase(),
       );
       if (existingUsers.length) {
-        throw new HttpError({
-          status: 400,
-          message: 'Username already exists',
-        });
+        throw new HttpError(400, 'Username already exists');
       }
     }
     const newUser = await db.User.update(user.id, {

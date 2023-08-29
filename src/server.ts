@@ -17,7 +17,7 @@ const { defineRoutes, attachRoutes } = createApplication({
       authenticate: async () => {
         const user = await context.getCurrentUser();
         if (!user) {
-          throw new HttpError({ status: 401 });
+          throw new HttpError(401);
         }
         return user;
       },
