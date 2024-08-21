@@ -2,6 +2,12 @@ import fetch from 'node-fetch';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import type { Application } from 'express';
 
+const css = `
+#crisp-chatbox {
+  display: none;
+}
+`;
+
 export function loadPlayground(app: Application) {
   app.get('/playground', (request, response, next) => {
     (async () => {
@@ -9,7 +15,7 @@ export function loadPlayground(app: Application) {
       let html = await fetchResponse.text();
       html = html.replace(
         '<script',
-        `<script>history.replaceState({}, null, '/')</script><script`,
+        `<script>history.replaceState({}, null, '/')</script><style>${css}</style><script`,
       );
       response.send(html);
     })().catch(next);
